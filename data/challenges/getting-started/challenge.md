@@ -2,10 +2,12 @@
 
 ## Overview
 - **ID:** getting-started
+- **Owner:** arjun-gmail-com
+- **Owner Name:** Arjun
 - **Type:** learning
-- **Status:** pending
+- **Status:** active
 - **Start Date:** 2026-01-01
-- **Target Date:** 
+- **Target Date:** 2026-01-30
 - **Daily Hours:** 0.5
 - **Agent:** accountability-coach
 

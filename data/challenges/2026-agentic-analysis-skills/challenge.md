@@ -2,6 +2,8 @@
 
 ## Overview
 - **ID:** 2026-agentic-analysis-skills
+- **Owner:** arjun-gmail-com
+- **Owner Name:** Arjun
 - **Type:** learning
 - **Status:** active
 - **Start Date:** 2026-01-01
