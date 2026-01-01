@@ -1,34 +1,82 @@
 # 10x Accountability Coach
 
-Your Personal AI-Powered Accountability System with real-time WebSocket chat, instant cache queries, and intelligent coaching.
+**Powered by Claude Code** - Your Personal AI Accountability System with real-time intelligence, context-aware coaching, and file-based memory.
+
+## 🧠 Architecture: Claude Code is THE BRAIN
+
+This app uses the **Claude Code SDK** to power intelligent responses:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TWO TERMINAL SETUP                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Terminal 1: App Infrastructure (npm start)                  │
+│  ├── WebSocket Server (ws://localhost:8765)                  │
+│  ├── Next.js UI (http://localhost:3000)                      │
+│  └── Auto-responder (basic mode)                             │
+│                                                              │
+│  Terminal 2: Claude Code - THE BRAIN (claude)                │
+│  ├── Watches data/.pending/ for messages                     │
+│  ├── Reads user profile, challenges, tasks                   │
+│  ├── Generates intelligent, personalized responses           │
+│  ├── Modifies files (check-ins, progress, tasks)             │
+│  └── Sends responses via WebSocket → UI                      │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**With Claude Code running, you get REAL AI coaching, not mock responses.**
+
+---
 
 ## Quick Start
 
-### First-time Setup
+### Terminal 1: Start the App (Zero Setup Required!)
 
 ```bash
-# 1. Install root dependencies
+npm start
+```
+
+The script automatically:
+1. ✅ Checks and installs root dependencies (dotenv, ws)
+2. ✅ Checks and installs UI dependencies (Next.js, React, etc.)
+3. ✅ Starts WebSocket server (ws://localhost:8765)
+4. ✅ Starts basic auto-responder
+5. ✅ Starts Next.js UI (http://localhost:3000)
+6. ✅ Initializes fast cache system
+
+### Terminal 2: Start Claude Code - THE BRAIN (Recommended)
+
+```bash
+claude
+```
+
+Then tell Claude Code:
+```
+"Watch for 10x messages and respond to users"
+```
+
+**Claude Code will:**
+- 🧠 Monitor `data/.pending/` for incoming messages
+- 📖 Read user context (profile, challenges, tasks, history)
+- 💬 Generate personalized, intelligent responses
+- 📝 Modify files (check-ins, progress tracking, task updates)
+- ⚡ Send responses back to UI in real-time
+
+**Open http://localhost:3000** - Your AI accountability coach is ready!
+
+### Optional: Manual Setup
+
+If you prefer to install dependencies first:
+
+```bash
+# Install all dependencies
 npm install
 
-# This will automatically:
-# - Install dotenv and ws packages
-# - Install UI dependencies via postinstall hook
-```
-
-### Start the App
-
-```bash
-# Start everything with one command
+# Then start
 npm start
-
-# Automatically starts:
-# - Next.js UI at http://localhost:3000
-# - WebSocket Server at ws://localhost:8765
-# - Fast Cache System (0-2ms queries)
-# - AI Listener for auto-responses
 ```
-
-**Open http://localhost:3000** - Your app is ready!
 
 ### Environment Setup
 
@@ -74,18 +122,43 @@ npm start
 ## Architecture
 
 ```
-User Browser → WebSocket Server → AI Backend → Fast Cache → data/
-     ↓              ↓                 ↓            ↓
- localhost:      :8765          ws-listener    0-2ms RAM
-   3000
+User (Browser) → WebSocket → data/.pending/ → Claude Code (Terminal 2)
+                     ↓                              ↓
+                localhost:3000              Reads: profile.md
+                                                   challenges/
+                                                   tasks/
+                                                   ↓
+                                            Generates response
+                                                   ↓
+                                            Writes: check-ins/
+                                                   progress.md
+                                                   ↓
+                                            WebSocket → UI
 ```
 
 **Key Components:**
-- **Next.js UI** - React interface at localhost:3000
-- **WebSocket Server** - Real-time message broker at ws://localhost:8765
-- **ws-listener** - Connects AI to WebSocket
-- **Fast Cache** - In-memory data store (0-2ms queries)
-- **data/ folder** - Persistent storage
+
+1. **Claude Code SDK (Terminal 2)** - THE BRAIN
+   - Monitors `data/.pending/` for user messages
+   - Has full file system access to read/write user data
+   - Generates intelligent, context-aware responses
+   - No external APIs needed - runs locally in your terminal
+
+2. **WebSocket Server** (ws://localhost:8765)
+   - Real-time bidirectional communication
+   - Routes messages between UI and Claude Code
+
+3. **Next.js UI** (http://localhost:3000)
+   - React-based frontend
+   - Chat interface, Vision Boards, Schedule, Streak tracking
+
+4. **Fast Cache System**
+   - In-memory data store (0-2ms queries)
+   - Quick access to profiles, challenges, tasks
+
+5. **data/ folder** - File-based storage
+   - User profiles, challenges, check-ins, tasks
+   - Claude Code reads/writes directly to these files
 
 ## Data Structure
 

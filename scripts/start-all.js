@@ -35,7 +35,7 @@ function showBanner() {
   console.log('\n' + colors.cyan + colors.bright);
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║                                                              ║');
-  console.log('║            OpenAnalyst Accountability Coach                  ║');
+  console.log('║               10x Accountability Coach                       ║');
   console.log('║               Automated Startup System                       ║');
   console.log('║                                                              ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
@@ -48,13 +48,41 @@ function log(message, color = colors.reset) {
   console.log(`${colors.bright}[${timestamp}]${colors.reset} ${color}${message}${colors.reset}`);
 }
 
-// Check if UI dependencies are installed
-function checkDependencies() {
+// Check if dependencies are installed
+async function checkDependencies() {
   log('Checking dependencies...', colors.blue);
 
+  let needsInstall = false;
+
+  // Check root dependencies (dotenv, ws)
+  if (!fs.existsSync(path.join(ROOT_DIR, 'node_modules'))) {
+    log('⚠️  Root dependencies not found. Installing...', colors.yellow);
+    needsInstall = true;
+
+    await new Promise((resolve, reject) => {
+      const npm = spawn('npm', ['install'], {
+        cwd: ROOT_DIR,
+        shell: true,
+        stdio: 'inherit'
+      });
+
+      npm.on('close', (code) => {
+        if (code === 0) {
+          log('✓ Root dependencies installed', colors.green);
+          resolve();
+        } else {
+          reject(new Error('Failed to install root dependencies'));
+        }
+      });
+    });
+  }
+
+  // Check UI dependencies
   if (!fs.existsSync(path.join(UI_DIR, 'node_modules'))) {
     log('⚠️  UI dependencies not found. Installing...', colors.yellow);
-    return new Promise((resolve, reject) => {
+    needsInstall = true;
+
+    await new Promise((resolve, reject) => {
       const npm = spawn('npm', ['install'], {
         cwd: UI_DIR,
         shell: true,
@@ -63,17 +91,18 @@ function checkDependencies() {
 
       npm.on('close', (code) => {
         if (code === 0) {
-          log('✓ Dependencies installed', colors.green);
+          log('✓ UI dependencies installed', colors.green);
           resolve();
         } else {
-          reject(new Error('Failed to install dependencies'));
+          reject(new Error('Failed to install UI dependencies'));
         }
       });
     });
   }
 
-  log('✓ Dependencies OK', colors.green);
-  return Promise.resolve();
+  if (!needsInstall) {
+    log('✓ All dependencies OK', colors.green);
+  }
 }
 
 // Start WebSocket server
@@ -209,13 +238,18 @@ function showReadyMessage() {
   console.log('║                                                              ║');
   console.log('║               Open: http://localhost:3000                    ║');
   console.log('║                                                              ║');
-  console.log('║  All systems running:                                        ║');
+  console.log('║  Infrastructure running (Terminal 1):                        ║');
   console.log('║    • WebSocket Server (ws://localhost:8765)                  ║');
-  console.log('║    • Claude Code Brain (auto-responding!)                    ║');
+  console.log('║    • Basic Auto-responder                                    ║');
   console.log('║    • Fast Cache System (in-memory)                           ║');
   console.log('║    • Next.js UI (http://localhost:3000)                      ║');
   console.log('║                                                              ║');
-  console.log('║  Claude Code is THE BRAIN - responding to all messages!      ║');
+  console.log('║  For FULL AI Intelligence (Optional):                        ║');
+  console.log('║    1. Open Terminal 2                                        ║');
+  console.log('║    2. Run: claude                                            ║');
+  console.log('║    3. Tell Claude: "Watch for OpenAnalyst messages"          ║');
+  console.log('║                                                              ║');
+  console.log('║  → Claude Code = THE BRAIN (context-aware AI coaching)       ║');
   console.log('║                                                              ║');
   console.log('║  Press Ctrl+C to stop all services                           ║');
   console.log('║                                                              ║');

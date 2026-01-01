@@ -14,7 +14,8 @@
     "seed": "node scripts/generate-sample-data.js",
     "generate-challenge": "node scripts/generate-challenge-data.js",
     "query": "node claude-query.js",
-    "postinstall": "cd ui && npm install"
+    "postinstall": "cd ui && npm install",
+    "setup": "npm install && cd ui && npm install"
   },
   "keywords": [
     "accountability",
