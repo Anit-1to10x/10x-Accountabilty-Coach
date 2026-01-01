@@ -6,10 +6,31 @@ import { PATHS, getProfilePaths } from '@/lib/paths'
 // Parse todos from active.md
 function parseTodosMd(content: string) {
   const todos: any[] = []
-  const lines = content.split('\n')
+  const today = new Date().toISOString().split('T')[0]
+
+  // Split by newlines and trim \r from each line (Windows line endings)
+  const lines = content.split('\n').map(l => l.replace(/\r$/, ''))
+
+  let currentDate = today
   let currentChallenge = ''
+  let isThisWeek = false
 
   for (const line of lines) {
+    // Check for date sections: ## Today (2026-01-01)
+    const dateSectionMatch = line.match(/^##\s+Today\s*\((\d{4}-\d{2}-\d{2})\)/i)
+    if (dateSectionMatch) {
+      currentDate = dateSectionMatch[1]
+      isThisWeek = false
+      continue
+    }
+
+    // Check for "This Week" section - tasks here are NOT for today
+    if (line.match(/^##\s+This Week/i)) {
+      isThisWeek = true
+      currentDate = null
+      continue
+    }
+
     // Track current challenge/section header (### Challenge Name)
     const sectionMatch = line.match(/^###\s+(.+)/)
     if (sectionMatch) {
@@ -33,7 +54,9 @@ function parseTodosMd(content: string) {
         createdAt: new Date().toISOString(),
         challengeId: null,
         challengeName: currentChallenge || null,
-        dueDate: new Date().toISOString().split('T')[0], // Default to today
+        dueDate: currentDate,
+        date: currentDate,
+        isThisWeek: isThisWeek,
       })
     }
   }

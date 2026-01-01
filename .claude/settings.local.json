@@ -29,7 +29,8 @@
       "Bash(set GIT_ASKPASS=echo)",
       "Bash(curl:*)",
       "Bash(del \"C:\\\\Users\\\\Anit\\\\Downloads\\\\Agentic_Skills-main\\\\data\\\\.cache-index.json\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(python -m json.tool:*)"
     ]
   }
 }
