@@ -14,7 +14,7 @@ async function toggleTaskInDayFile(
   dayNum: number,
   taskTitle: string,
   completed: boolean
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; immutable?: boolean }> {
   const daysDir = path.join(PATHS.challenges, challengeId, 'days')
   const dayFile = path.join(daysDir, `day-${dayNum.toString().padStart(2, '0')}.md`)
 
@@ -24,6 +24,19 @@ async function toggleTaskInDayFile(
     // Extract just the task name (without duration)
     const cleanTitle = taskTitle.split('(')[0].trim()
     const escapedTitle = escapeRegex(cleanTitle)
+
+    // Match the task line - check current status first
+    const currentPattern = new RegExp(`- \\[([xX ])\\]\\s*(${escapedTitle}[^\\n]*)`, 'i')
+    const currentMatch = content.match(currentPattern)
+
+    // IMMUTABILITY PROTECTION: Prevent unchecking completed challenge tasks
+    if (currentMatch && currentMatch[1].toLowerCase() === 'x' && !completed) {
+      return {
+        success: false,
+        error: 'Cannot uncheck completed challenge task. Once checked in, it stays checked.',
+        immutable: true
+      }
+    }
 
     // Match the task line and update checkbox
     const checkbox = completed ? '[x]' : '[ ]'

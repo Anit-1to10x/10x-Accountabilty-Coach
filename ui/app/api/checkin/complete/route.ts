@@ -259,9 +259,32 @@ async function updateRegistry(
 
 export async function POST(request: NextRequest) {
   try {
-    const data: CheckInCompleteData = await request.json()
+    const data: CheckInCompleteData & { aiAccepted?: boolean } = await request.json()
 
-    const { completedTaskIds, tasks, challengeId } = data
+    const { completedTaskIds, tasks, challengeId, aiAccepted } = data
+
+    // VALIDATION: Check if check-in is allowed
+    if (challengeId) {
+      const validationResponse = await fetch(`${request.nextUrl.origin}/api/checkin/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId, aiAccepted })
+      })
+
+      const validation = await validationResponse.json()
+
+      if (!validation.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: validation.message,
+            requiresAIAcceptance: validation.requiresAIAcceptance,
+            alreadyCheckedIn: validation.alreadyCheckedIn
+          },
+          { status: validation.alreadyCheckedIn ? 409 : 403 }
+        )
+      }
+    }
 
     // Group tasks by challenge and day
     const tasksByChallenge: Record<string, Record<number, TaskInfo[]>> = {}

@@ -71,6 +71,17 @@ export async function PATCH(
       )
     }
 
+    // IMMUTABILITY PROTECTION: Prevent unchecking completed todos
+    if (completed !== undefined && completed === false && todos[todoIndex].completed === true) {
+      return NextResponse.json(
+        {
+          error: 'Cannot uncheck completed todo. Once checked in, it stays checked.',
+          immutable: true
+        },
+        { status: 403 }
+      )
+    }
+
     // Update fields
     if (completed !== undefined) todos[todoIndex].completed = completed
     if (title !== undefined) todos[todoIndex].title = title

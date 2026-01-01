@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2, Circle, Clock, Calendar, TrendingUp } from 'lucide-react'
 import { AnimatedButton } from '../ui/AnimatedButton'
 import { addProfileId, useProfileId } from '@/lib/useProfileId'
+import { LateCheckinDialog } from './LateCheckinDialog'
 
 interface Todo {
   id: string
@@ -33,6 +34,9 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [showLateDialog, setShowLateDialog] = useState(false)
+  const [lateCheckInHours, setLateCheckInHours] = useState(0)
+  const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false)
   const profileId = useProfileId()
 
   // Load incomplete tasks based on current time
@@ -108,11 +112,51 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
     setSelectedTasks(newSelected)
   }
 
-  const handleCheckIn = async () => {
+  const handleCheckIn = async (aiAccepted: boolean = false) => {
     if (selectedTasks.size === 0) return
 
     setSubmitting(true)
     try {
+      // First, validate the check-in
+      const firstTask = availableTasks.find(t => selectedTasks.has(t.id))
+      const challengeId = firstTask?.challengeId
+
+      if (challengeId) {
+        const validationResponse = await fetch('/api/checkin/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challengeId, aiAccepted })
+        })
+
+        const validation = await validationResponse.json()
+
+        // If already checked in today, show error and stop
+        if (validation.alreadyCheckedIn) {
+          setAlreadyCheckedIn(true)
+          setSubmitting(false)
+          setTimeout(() => {
+            onClose()
+            resetCheckIn()
+          }, 3000)
+          return
+        }
+
+        // If requires AI acceptance and not yet accepted, show dialog
+        if (validation.requiresAIAcceptance && !aiAccepted) {
+          setLateCheckInHours(validation.hoursLate || 0)
+          setShowLateDialog(true)
+          setSubmitting(false)
+          return
+        }
+
+        // If not allowed for other reasons, show error
+        if (!validation.allowed) {
+          alert(validation.message)
+          setSubmitting(false)
+          return
+        }
+      }
+
       const checkInData = {
         date: new Date().toISOString(),
         agentId: agentId || 'unified',
@@ -130,7 +174,17 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
         })
       )
 
-      await Promise.all(updatePromises)
+      const results = await Promise.all(updatePromises)
+
+      // Check if any tasks failed due to immutability
+      const failedResults = await Promise.all(results.map(r => r.json()))
+      const immutableError = failedResults.find(r => r.immutable)
+
+      if (immutableError) {
+        alert(immutableError.error)
+        setSubmitting(false)
+        return
+      }
 
       // Save check-in to file
       await fetch('/api/checkin', {
@@ -152,6 +206,16 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleLateCheckInAccept = () => {
+    setShowLateDialog(false)
+    handleCheckIn(true)
+  }
+
+  const handleLateCheckInCancel = () => {
+    setShowLateDialog(false)
+    setSubmitting(false)
   }
 
   const resetCheckIn = () => {
@@ -415,6 +479,44 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
               </div>
             </div>
           </motion.div>
+
+          {/* Late Check-In Dialog */}
+          {showLateDialog && (
+            <LateCheckinDialog
+              hoursLate={lateCheckInHours}
+              onAccept={handleLateCheckInAccept}
+              onCancel={handleLateCheckInCancel}
+            />
+          )}
+
+          {/* Already Checked In Message */}
+          {alreadyCheckedIn && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-md border border-blue-500/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center"
+              >
+                <CheckCircle2 className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-white mb-3">
+                  Already Checked In
+                </h2>
+                <p className="text-gray-300">
+                  You've already completed your check-in for today. Great job staying consistent!
+                </p>
+                <div className="mt-4 text-sm text-gray-400">
+                  Check-ins are limited to once per day
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </>
       )}
     </AnimatePresence>

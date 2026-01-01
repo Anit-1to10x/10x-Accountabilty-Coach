@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "lastBuild": "2025-12-31T05:45:34.279Z",
+  "lastBuild": "2026-01-01T11:09:17.311Z",
   "profiles": {
     "arjun-gmail-com": {
       "id": "arjun-gmail-com",
-      "path": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com",
-      "challenges": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\challenges",
-      "todos": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\todos",
-      "chats": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\chats"
+      "path": "C:\\Users\\Anit\\Downloads\\Agentic_Skills-main\\data\\profiles\\arjun-gmail-com",
+      "challenges": "C:\\Users\\Anit\\Downloads\\Agentic_Skills-main\\data\\profiles\\arjun-gmail-com\\challenges",
+      "todos": "C:\\Users\\Anit\\Downloads\\Agentic_Skills-main\\data\\profiles\\arjun-gmail-com\\todos",
+      "chats": "C:\\Users\\Anit\\Downloads\\Agentic_Skills-main\\data\\profiles\\arjun-gmail-com\\chats"
     }
   },
   "agents": {

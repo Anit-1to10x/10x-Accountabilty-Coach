@@ -27,7 +27,9 @@
       "Bash(ping:*)",
       "Bash(ren \"anit-gmail-co\" \"arjun-gmail-com\")",
       "Bash(set GIT_ASKPASS=echo)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(del \"C:\\\\Users\\\\Anit\\\\Downloads\\\\Agentic_Skills-main\\\\data\\\\.cache-index.json\")",
+      "Bash(find:*)"
     ]
   }
 }
