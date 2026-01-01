@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "lastBuild": "2025-12-31T05:45:34.279Z",
+  "profiles": {
+    "arjun-gmail-com": {
+      "id": "arjun-gmail-com",
+      "path": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com",
+      "challenges": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\challenges",
+      "todos": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\todos",
+      "chats": "C:\\Users\\Anit\\Downloads\\OpenAnalyst Accountability coach\\data\\profiles\\arjun-gmail-com\\chats"
+    }
+  },
+  "agents": {
+    "accountability-coach": {
+      "id": "accountability-coach",
+      "name": "Accountability Coach",
+      "description": "Your personal accountability partner who helps you stay on track with your goals",
+      "avatar": "coach",
+      "tone": "encouraging",
+      "style": "supportive but honest",
+      "capabilities": [
+        "challenge-creation",
+        "daily-checkin",
+        "progress-tracking",
+        "motivation",
+        "planning"
+      ],
+      "skills": [
+        "streak",
+        "daily-checkin",
+        "smart-scheduler",
+        "nanobanana-skill"
+      ]
+    }
+  },
+  "stats": {
+    "totalProfiles": 1,
+    "totalChallenges": 0,
+    "totalTodos": 0
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm start)",
+      "Bash(npm run:*)",
+      "Bash(node send-response-fast.js:*)",
+      "Bash(node claude-query.js:*)",
+      "Bash(node scripts/start-all.js:*)",
+      "Bash(npm install:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(lsof:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(xargs kill:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(findstr:*)",
+      "Bash(del \"C:\\\\Users\\\\Anit\\\\Downloads\\\\OpenAnalyst Accountability coach\\\\data\\\\.cache-index.json\")",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(tasklist:*)",
+      "Bash(ping:*)",
+      "Bash(ren \"anit-gmail-co\" \"arjun-gmail-com\")",
+      "Bash(set GIT_ASKPASS=echo)",
+      "Bash(curl:*)"
+    ]
+  }
+}

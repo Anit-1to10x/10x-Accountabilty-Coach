@@ -1,0 +1,52 @@
+{
+  "name": "openanalyst-accountability-coach",
+  "version": "1.1.0",
+  "description": "Your Personal Accountability Coach",
+  "main": "lib/index.js",
+  "scripts": {
+    "start": "node scripts/start-all.js",
+    "init": "node scripts/init.js",
+    "install-plugin": "node scripts/install-plugin.js",
+    "dev": "cd ui && npm run dev",
+    "dev:ws": "node server/websocket.js",
+    "build": "cd ui && npm run build",
+    "test": "node --test lib/**/*.test.js",
+    "seed": "node scripts/generate-sample-data.js",
+    "generate-challenge": "node scripts/generate-challenge-data.js",
+    "query": "node claude-query.js",
+    "postinstall": "cd ui && npm install"
+  },
+  "keywords": [
+    "accountability",
+    "claude-code",
+    "productivity",
+    "habits",
+    "streak",
+    "challenges",
+    "coaching"
+  ],
+  "author": {
+    "name": "OpenAnalyst",
+    "email": "support@openanalyst.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Anit-1to10x/10x-Accountabilty-Coach.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "lib/",
+    "skills/",
+    "commands/",
+    "plugins/",
+    "scripts/",
+    "settings.json"
+  ],
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "ws": "^8.18.3"
+  }
+}

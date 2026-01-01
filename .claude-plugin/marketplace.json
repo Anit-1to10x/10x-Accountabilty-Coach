@@ -1,0 +1,93 @@
+{
+  "name": "OpenAnalyst-Accountability-Coach",
+  "owner": {
+    "name": "OpenAnalyst",
+    "email": "support@openanalyst.com"
+  },
+  "metadata": {
+    "description": "OpenAnalyst Accountability Coach - Your Personal AI-Powered Accountability System with Dynamic Coaching",
+    "version": "2.0.0",
+    "homepage": "https://github.com/openanalyst/accountability-coach"
+  },
+  "plugins": [
+    {
+      "name": "oa-deckling",
+      "description": "OpenAnalyst PPTX Generator - Create professional presentations using Anthropic Platform Skills API",
+      "source": "./plugins/deckling"
+    },
+    {
+      "name": "oa-accountability",
+      "description": "OpenAnalyst Accountability Suite - Complete accountability system with dynamic coaching, commitment contracts, and intelligent tracking",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/user-onboarding",
+        "./skills/challenge-onboarding",
+        "./skills/streak",
+        "./skills/daily-checkin",
+        "./skills/motivation",
+        "./skills/schedule-replanner",
+        "./skills/punishment",
+        "./skills/excalidraw"
+      ],
+      "commands": [
+        "./commands/streak.md",
+        "./commands/streak-new.md",
+        "./commands/streak-list.md",
+        "./commands/streak-switch.md",
+        "./commands/streak-stats.md",
+        "./commands/streak-insights.md"
+      ]
+    }
+  ],
+  "skills": {
+    "user-onboarding": {
+      "id": "oa-user-onboarding",
+      "name": "User Onboarding",
+      "description": "Chat-based onboarding to understand user profile and preferences",
+      "category": "onboarding"
+    },
+    "challenge-onboarding": {
+      "id": "oa-challenge-onboarding",
+      "name": "Challenge Onboarding",
+      "description": "Dynamic AI-driven onboarding for creating new challenges",
+      "category": "onboarding"
+    },
+    "streak": {
+      "id": "oa-streak",
+      "name": "Streak Tracker",
+      "description": "Universal challenge tracker with flexible cadence",
+      "category": "accountability"
+    },
+    "daily-checkin": {
+      "id": "oa-daily-checkin",
+      "name": "Daily Check-in",
+      "description": "Structured daily check-ins with progress tracking",
+      "category": "accountability"
+    },
+    "motivation": {
+      "id": "oa-motivation",
+      "name": "Motivation Generator",
+      "description": "Context-aware motivation based on user's triggers",
+      "category": "motivation"
+    },
+    "schedule-replanner": {
+      "id": "oa-schedule-replanner",
+      "name": "Schedule Replanner",
+      "description": "Intelligent schedule adjustment when life happens",
+      "category": "planning"
+    },
+    "punishment": {
+      "id": "oa-punishment",
+      "name": "Commitment Contracts",
+      "description": "StickK/Beeminder-inspired commitment contracts with real stakes",
+      "category": "accountability"
+    },
+    "excalidraw": {
+      "id": "oa-excalidraw",
+      "name": "Excalidraw Generator",
+      "description": "Generate architecture diagrams as .excalidraw files",
+      "category": "visualization"
+    }
+  }
+}
