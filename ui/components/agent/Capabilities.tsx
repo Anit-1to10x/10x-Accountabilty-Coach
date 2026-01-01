@@ -68,11 +68,13 @@ export function Capabilities({ agent, onActionClick }: CapabilitiesProps) {
       const url = addProfileId('/api/todos', profileId)
       const res = await fetch(url)
       const data = await res.json()
+      // API returns array directly, not { todos: [...] }
+      const todosArray = Array.isArray(data) ? data : (data.todos || [])
       const today = new Date().toISOString().split('T')[0]
-      const relevantTodos = data.todos?.filter((todo: any) => {
-        const todoDate = new Date(todo.date).toISOString().split('T')[0]
+      const relevantTodos = todosArray.filter((todo: any) => {
+        const todoDate = todo.dueDate || todo.date
         return todoDate >= today && !todo.completed
-      }).slice(0, 5) || []
+      }).slice(0, 5)
       setTodos(relevantTodos)
     } catch (error) {
       console.error('Failed to load todos:', error)
@@ -84,9 +86,11 @@ export function Capabilities({ agent, onActionClick }: CapabilitiesProps) {
       const url = addProfileId('/api/todos', profileId)
       const res = await fetch(url)
       const data = await res.json()
+      // API returns array directly, not { todos: [...] }
+      const todosArray = Array.isArray(data) ? data : (data.todos || [])
       const today = new Date().toISOString().split('T')[0]
-      const todayTask = data.todos?.find((todo: any) => {
-        const todoDate = new Date(todo.date).toISOString().split('T')[0]
+      const todayTask = todosArray.find((todo: any) => {
+        const todoDate = todo.dueDate || todo.date
         return todoDate === today && !todo.completed
       })
       setCurrentTask(todayTask || null)
@@ -100,9 +104,11 @@ export function Capabilities({ agent, onActionClick }: CapabilitiesProps) {
       const url = addProfileId('/api/todos', profileId)
       const res = await fetch(url)
       const data = await res.json()
-      const completed = data.todos?.filter((todo: any) => todo.completed)
+      // API returns array directly, not { todos: [...] }
+      const todosArray = Array.isArray(data) ? data : (data.todos || [])
+      const completed = todosArray.filter((todo: any) => todo.completed)
         .sort((a: any, b: any) => new Date(b.completedAt || b.date).getTime() - new Date(a.completedAt || a.date).getTime())
-        .slice(0, 3) || []
+        .slice(0, 3)
       setRecentCompletions(completed)
     } catch (error) {
       console.error('Failed to load recent completions:', error)

@@ -6,30 +6,36 @@ import { PATHS, getProfilePaths } from '@/lib/paths'
 // Parse todos from active.md
 function parseTodosMd(content: string) {
   const todos: any[] = []
+  const lines = content.split('\n')
+  let currentChallenge = ''
 
-  // Match todo items: - [x] or - [ ] followed by text
-  const todoMatches = content.matchAll(/- \[([ xX])\]\s*\*\*(.+?)\*\*\n([\s\S]*?)(?=\n- \[|$)/g)
+  for (const line of lines) {
+    // Track current challenge/section header (### Challenge Name)
+    const sectionMatch = line.match(/^###\s+(.+)/)
+    if (sectionMatch) {
+      currentChallenge = sectionMatch[1].trim()
+      continue
+    }
 
-  for (const match of todoMatches) {
-    const completed = match[1].toLowerCase() === 'x'
-    const title = match[2].trim()
-    const details = match[3]
+    // Match todo items: - [x] or - [ ] followed by text (plain or **bold**)
+    const todoMatch = line.match(/^-\s*\[([ xX])\]\s*(?:\*\*)?(.+?)(?:\*\*)?$/)
+    if (todoMatch) {
+      const completed = todoMatch[1].toLowerCase() === 'x'
+      const title = todoMatch[2].trim()
 
-    // Parse details
-    const priorityMatch = details.match(/Priority:\s*(\w+)/i)
-    const createdMatch = details.match(/Created:\s*(.+)/i)
-    const challengeMatch = details.match(/Challenge:\s*(.+)/i)
-
-    todos.push({
-      id: `todo-${todos.length + 1}`,
-      title,
-      text: title,
-      status: completed ? 'completed' : 'pending',
-      completed,
-      priority: priorityMatch?.[1]?.toLowerCase() || 'medium',
-      createdAt: createdMatch?.[1]?.trim() || new Date().toISOString(),
-      challengeId: challengeMatch?.[1]?.trim() || null,
-    })
+      todos.push({
+        id: `todo-${todos.length + 1}`,
+        title,
+        text: title,
+        status: completed ? 'completed' : 'pending',
+        completed,
+        priority: 'medium',
+        createdAt: new Date().toISOString(),
+        challengeId: null,
+        challengeName: currentChallenge || null,
+        dueDate: new Date().toISOString().split('T')[0], // Default to today
+      })
+    }
   }
 
   return todos
