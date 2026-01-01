@@ -33,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Anit-1to10x/10x-Accountabilty-Coach.git"
+    "url": "https://github.com/Anit-1to10x/10x-Accountability-Coach.git"
   },
   "engines": {
     "node": ">=18.0.0"

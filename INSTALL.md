@@ -315,7 +315,7 @@ npm start
 
 ### Need Help?
 - Check troubleshooting section above
-- Open an issue: https://github.com/Anit-1to10x/10x-Accountabilty-Coach/issues
+- Open an issue: https://github.com/Anit-1to10x/10x-Accountability-Coach/issues
 - Read the docs: See README.md
 
 ---
