@@ -1,37 +1,59 @@
-# OpenAnalyst - Powered by Claude
+# OpenAnalyst - Powered by Claude Code
 
 ## Architecture
 
-**OpenAnalyst is the accountability coach app. Claude Code powers everything.**
+**OpenAnalyst is the accountability coach app. Claude Code (running in terminal) IS the brain.**
 
 ```
-User (OpenAnalyst UI) → WebSocket → Claude Code → Response → User sees coach reply
-                                        ↓
-                              File Operations (local data/)
+User (OpenAnalyst UI) → WebSocket → data/.pending/ → Claude Code (YOU)
+                                                          ↓
+                                                  Read context, process
+                                                          ↓
+                                              Generate intelligent response
+                                                          ↓
+                                                  Send via WebSocket
+                                                          ↓
+                                              User sees personalized reply
 ```
 
 Claude Code:
-- Runs in the terminal
-- Starts and manages the UI
-- Listens to all WebSocket messages
-- Generates intelligent responses using cached context
-- Handles file modifications, check-ins, and all features
-- IS the brain behind the entire system
+- **YOU** (Claude Code CLI running in terminal)
+- Watches for messages in `data/.pending/`
+- Reads user profile, challenges, tasks for context
+- Generates intelligent responses using full Claude capabilities
+- Modifies files (check-ins, progress, tasks) as needed
+- **Real AI brain, not mock responses**
 
 ---
 
 ## Quick Start
 
-**Tell the user:**
+### Terminal 1: Start the App
 ```bash
 npm start
 ```
 
-This starts everything:
+This starts:
 - Next.js UI at http://localhost:3000
 - WebSocket Server at ws://localhost:8765
-- ws-listener (auto-handles messages)
-- Cache system (0-2ms data access)
+- File watcher system
+
+### Terminal 2: Run Claude Code (THE BRAIN)
+```bash
+claude
+```
+
+Then tell Claude Code:
+```
+"Watch for OpenAnalyst messages and respond to users"
+```
+
+Claude Code will automatically:
+1. Detect messages from UI
+2. Read user context
+3. Generate personalized responses
+4. Send back to UI
+5. Update files as needed
 
 If ports are busy:
 ```bash
