@@ -244,14 +244,37 @@ function showReadyMessage() {
   console.log('║    ✓ Fast Cache System (in-memory)                           ║');
   console.log('║    ✓ Next.js UI (http://localhost:3000)                      ║');
   console.log('║                                                              ║');
-  console.log('║  → Claude Code is THE BRAIN - fully active!                  ║');
-  console.log('║  → Context-aware AI coaching enabled                         ║');
-  console.log('║  → All messages get intelligent responses                    ║');
-  console.log('║                                                              ║');
   console.log('║  Press Ctrl+C to stop all services                           ║');
   console.log('║                                                              ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log(colors.reset + '\n');
+
+  // Show Claude Code integration instructions
+  console.log(colors.cyan + colors.bright + '📋 TERMINAL 2: Run Claude Code (THE BRAIN)\n' + colors.reset);
+  console.log(colors.yellow + 'Open a second terminal and run:' + colors.reset);
+  console.log(colors.cyan + '  claude\n' + colors.reset);
+
+  console.log(colors.yellow + 'Then paste this prompt into Claude Code:' + colors.reset);
+  console.log(colors.bright + '┌─────────────────────────────────────────────────────────────┐' + colors.reset);
+  console.log(colors.cyan + '│ Read and execute: node claude-watch.js                      │');
+  console.log('│                                                             │');
+  console.log('│ This shows you pending messages and user context. Then set │');
+  console.log('│ up continuous watching for new messages in data/.pending/  │');
+  console.log('│ and respond to them using:                                 │');
+  console.log('│   node send-response-fast.js <requestId>                   │' + colors.reset);
+  console.log(colors.bright + '└─────────────────────────────────────────────────────────────┘' + colors.reset);
+  console.log('');
+
+  console.log(colors.green + '✨ Once Claude Code is running, it will:' + colors.reset);
+  console.log('   • Detect messages from the UI automatically');
+  console.log('   • Load user context (profile, challenges, tasks)');
+  console.log('   • Generate intelligent, personalized responses');
+  console.log('   • Stream responses back to the UI in real-time');
+  console.log('   • Maintain conversation context across messages');
+  console.log('');
+
+  console.log(colors.bright + 'For detailed instructions, see: CLAUDE.md' + colors.reset);
+  console.log('');
 }
 
 // Graceful shutdown
