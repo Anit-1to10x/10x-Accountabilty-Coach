@@ -84,6 +84,19 @@ export async function PATCH(
           // If this is the todo to update
           if (todoId === params.id) {
             if (completed !== undefined) {
+              const currentlyCompleted = todoMatch[1].toLowerCase() === 'x'
+
+              // IMMUTABILITY PROTECTION: Prevent unchecking completed todos
+              if (currentlyCompleted && !completed) {
+                return NextResponse.json(
+                  {
+                    error: 'Cannot uncheck completed todo. Once checked in, it stays checked.',
+                    immutable: true
+                  },
+                  { status: 403 }
+                )
+              }
+
               // Update the checkbox
               const checkbox = completed ? '[x]' : '[ ]'
               const taskText = todoMatch[2]

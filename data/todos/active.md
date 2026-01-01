@@ -4,7 +4,7 @@ Last Updated: 2025-12-30
 
 ## Tasks
 
-- [ ] **Complete React useState tutorial**
+- [x] **Complete React useState tutorial**
   - Priority: high
   - Created: 2025-12-28T09:00:00.000Z
   - Challenge: None

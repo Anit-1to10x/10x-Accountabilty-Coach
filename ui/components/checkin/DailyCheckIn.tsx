@@ -13,6 +13,7 @@ interface Todo {
   date: string
   time?: string
   challengeId?: string
+  challengeName?: string
   completed: boolean
   priority?: 'low' | 'medium' | 'high'
 }
@@ -53,15 +54,39 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
       const currentHour = now.getHours()
       const today = now.toISOString().split('T')[0]
 
+      // Load challenges to map names to IDs
+      const challengesUrl = addProfileId('/api/challenges', profileId)
+      const challengesResponse = await fetch(challengesUrl)
+      const challengesData = await challengesResponse.json()
+      const challenges = challengesData.challenges || []
+
+      // Create name -> ID mapping
+      const challengeNameToId: Record<string, string> = {}
+      challenges.forEach((c: any) => {
+        challengeNameToId[c.name] = c.id
+        // Also map partial names (e.g., "Getting Started Challenge" -> "getting-started")
+        if (c.name.includes('Getting Started')) challengeNameToId['Getting Started Challenge'] = c.id
+        if (c.name.includes('Agentic')) challengeNameToId['Agentic Analysis Skills Challenge'] = c.id
+      })
+
       // Fetch all incomplete todos for today
       const url = addProfileId('/api/todos', profileId)
       const response = await fetch(url)
       const data = await response.json()
 
-      // Filter tasks for today that are incomplete
-      let todayTasks = (data.todos || []).filter((todo: Todo) => {
+      // Filter tasks for today that are incomplete and map challenge names to IDs
+      let todayTasks = (data || []).filter((todo: Todo) => {
         const taskDate = todo.date?.split('T')[0]
         return taskDate === today && !todo.completed
+      }).map((todo: Todo) => {
+        // Map challenge name to ID if present
+        if (todo.challengeName && challengeNameToId[todo.challengeName]) {
+          return {
+            ...todo,
+            challengeId: challengeNameToId[todo.challengeName]
+          }
+        }
+        return todo
       })
 
       // Intelligent filtering based on time of day
@@ -165,28 +190,90 @@ export function DailyCheckIn({ isOpen, onClose, agentId }: DailyCheckInProps) {
         tasksCount: selectedTasks.size
       }
 
-      // Mark tasks as completed
-      const updatePromises = Array.from(selectedTasks).map(taskId =>
-        fetch(`/api/todos/${taskId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ completed: true })
-        })
-      )
+      // Load challenges again to get start dates for day calculation
+      const challengesUrl = addProfileId('/api/challenges', profileId)
+      const challengesResponse = await fetch(challengesUrl)
+      const challengesData = await challengesResponse.json()
+      const challenges = challengesData.challenges || []
 
-      const results = await Promise.all(updatePromises)
+      // Create challenge ID -> start date mapping
+      const challengeStartDates: Record<string, string> = {}
+      challenges.forEach((c: any) => {
+        challengeStartDates[c.id] = c.startDate || c.start_date
+      })
 
-      // Check if any tasks failed due to immutability
-      const failedResults = await Promise.all(results.map(r => r.json()))
-      const immutableError = failedResults.find(r => r.immutable)
+      // Calculate current day for each challenge
+      const today = new Date()
+      const calculateDayNumber = (challengeId: string) => {
+        const startDate = challengeStartDates[challengeId]
+        if (!startDate) return 1
 
-      if (immutableError) {
-        alert(immutableError.error)
-        setSubmitting(false)
-        return
+        const start = new Date(startDate)
+        const diffTime = today.getTime() - start.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        return Math.max(1, diffDays + 1) // Day 1 = start date
       }
 
-      // Save check-in to file
+      // Prepare task information for challenge updates
+      const taskInfos = availableTasks
+        .filter(t => selectedTasks.has(t.id))
+        .map(t => ({
+          id: t.id,
+          title: t.title,
+          challengeId: t.challengeId || '',
+          day: t.challengeId ? calculateDayNumber(t.challengeId) : 1,
+          completed: true
+        }))
+
+      // Mark regular todos as completed (in active.md)
+      const regularTodos = taskInfos.filter(t => !t.challengeId)
+      if (regularTodos.length > 0) {
+        const updatePromises = regularTodos.map(task =>
+          fetch(`/api/todos/${task.id}?profileId=${profileId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: true })
+          })
+        )
+
+        const results = await Promise.all(updatePromises)
+        const failedResults = await Promise.all(results.map(r => r.json()))
+        const immutableError = failedResults.find(r => r.immutable)
+
+        if (immutableError) {
+          alert(immutableError.error)
+          setSubmitting(false)
+          return
+        }
+      }
+
+      // Get challenge IDs to update
+      const challengeIds = [...new Set(taskInfos.filter(t => t.challengeId).map(t => t.challengeId))]
+
+      // Call checkin/complete for each challenge to update streaks and challenge files
+      if (challengeIds.length > 0) {
+        for (const challengeId of challengeIds) {
+          const challengeTasks = taskInfos.filter(t => t.challengeId === challengeId)
+
+          await fetch('/api/checkin/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              challengeId,
+              completedTaskIds: challengeTasks.map(t => t.id),
+              tasks: challengeTasks,
+              mood: contextAnswers.energy === 'high' ? 5 : contextAnswers.energy === 'medium' ? 3 : 2,
+              wins: `Completed ${challengeTasks.length} tasks`,
+              blockers: contextAnswers.challenges || '',
+              tomorrowCommitment: 'Continue the streak',
+              timestamp: new Date().toISOString(),
+              aiAccepted
+            })
+          })
+        }
+      }
+
+      // Save check-in log to file
       await fetch('/api/checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
