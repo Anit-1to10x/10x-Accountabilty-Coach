@@ -238,18 +238,15 @@ function showReadyMessage() {
   console.log('║                                                              ║');
   console.log('║               Open: http://localhost:3000                    ║');
   console.log('║                                                              ║');
-  console.log('║  Infrastructure running (Terminal 1):                        ║');
-  console.log('║    • WebSocket Server (ws://localhost:8765)                  ║');
-  console.log('║    • Basic Auto-responder                                    ║');
-  console.log('║    • Fast Cache System (in-memory)                           ║');
-  console.log('║    • Next.js UI (http://localhost:3000)                      ║');
+  console.log('║  All Services Running:                                       ║');
+  console.log('║    ✓ WebSocket Server (ws://localhost:8765)                  ║');
+  console.log('║    ✓ Claude Code Brain (AI Responder)                        ║');
+  console.log('║    ✓ Fast Cache System (in-memory)                           ║');
+  console.log('║    ✓ Next.js UI (http://localhost:3000)                      ║');
   console.log('║                                                              ║');
-  console.log('║  For FULL AI Intelligence (Optional):                        ║');
-  console.log('║    1. Open Terminal 2                                        ║');
-  console.log('║    2. Run: claude                                            ║');
-  console.log('║    3. Tell Claude: "Watch for OpenAnalyst messages"          ║');
-  console.log('║                                                              ║');
-  console.log('║  → Claude Code = THE BRAIN (context-aware AI coaching)       ║');
+  console.log('║  → Claude Code is THE BRAIN - fully active!                  ║');
+  console.log('║  → Context-aware AI coaching enabled                         ║');
+  console.log('║  → All messages get intelligent responses                    ║');
   console.log('║                                                              ║');
   console.log('║  Press Ctrl+C to stop all services                           ║');
   console.log('║                                                              ║');
@@ -284,7 +281,10 @@ async function main() {
     // Step 3: Start ws-listener (for message routing)
     await startWsListener();
 
-    // Step 4: Start UI
+    // Step 4: Start Claude Code Brain (THE AI)
+    await startClaudeResponder();
+
+    // Step 5: Start UI
     await startUI();
 
     // Show ready message
