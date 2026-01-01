@@ -43,16 +43,37 @@ This starts:
 claude
 ```
 
-Then tell Claude Code:
+Then give Claude Code this prompt:
 ```
-"Watch for OpenAnalyst messages and respond to users"
+Read and execute: node claude-watch.js
+
+This shows you pending messages and user context. Then set up continuous watching for new messages in data/.pending/ and respond to them using: node send-response-fast.js <requestId>
+```
+
+**Detailed Prompt (if needed):**
+```
+You are the AI brain for OpenAnalyst. Here's what to do:
+
+1. First, run: node claude-watch.js
+   (Shows pending messages and user context)
+
+2. Set up continuous watching for data/.pending/:
+   - Monitor for new .json files (new user messages)
+   - When found, read the message content
+   - Load user context from data/profiles/
+   - Generate a personalized, encouraging response
+   - Send using: node send-response-fast.js <requestId>
+
+3. Keep watching for new messages and respond to all of them.
+
+Start by running claude-watch.js to see current status.
 ```
 
 Claude Code will automatically:
 1. Detect messages from UI
-2. Read user context
+2. Read user context (profile, challenges, tasks)
 3. Generate personalized responses
-4. Send back to UI
+4. Send back to UI via WebSocket
 5. Update files as needed
 
 If ports are busy:

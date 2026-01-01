@@ -3,6 +3,13 @@ import fs from 'fs/promises'
 import path from 'path'
 import { DATA_DIR, PATHS } from '@/lib/paths'
 
+// Helper to get agents array from data (handles both formats)
+function getAgentsArray(data: any): any[] {
+  if (Array.isArray(data)) return data
+  if (data.agents && Array.isArray(data.agents)) return data.agents
+  return []
+}
+
 // GET - Get individual agent details
 export async function GET(
   request: NextRequest,
@@ -14,7 +21,8 @@ export async function GET(
 
     // Read agents.json
     const agentsContent = await fs.readFile(agentsFile, 'utf-8')
-    const agents = JSON.parse(agentsContent)
+    const agentsData = JSON.parse(agentsContent)
+    const agents = getAgentsArray(agentsData)
 
     const agent = agents.find((a: any) => a.id === agentId)
 
@@ -48,7 +56,8 @@ export async function PUT(
 
     // Read agents.json
     const agentsContent = await fs.readFile(agentsFile, 'utf-8')
-    const agents = JSON.parse(agentsContent)
+    const agentsData = JSON.parse(agentsContent)
+    const agents = getAgentsArray(agentsData)
 
     // Find and update the agent
     const agentIndex = agents.findIndex((a: any) => a.id === agentId)
@@ -63,8 +72,12 @@ export async function PUT(
     // Update agent with new data
     agents[agentIndex] = { ...agents[agentIndex], ...updates }
 
-    // Write back to agents.json
-    await fs.writeFile(agentsFile, JSON.stringify(agents, null, 2), 'utf-8')
+    // Write back to agents.json (preserve structure)
+    const outputData = {
+      agents: agents,
+      lastUpdated: new Date().toISOString()
+    }
+    await fs.writeFile(agentsFile, JSON.stringify(outputData, null, 2), 'utf-8')
 
     // Also update the agent's metadata file if it exists
     const agentDir = path.join(DATA_DIR, 'agents', agentId)
@@ -99,7 +112,8 @@ export async function DELETE(
 
     // Read agents.json
     const agentsContent = await fs.readFile(agentsFile, 'utf-8')
-    const agents = JSON.parse(agentsContent)
+    const agentsData = JSON.parse(agentsContent)
+    const agents = getAgentsArray(agentsData)
 
     // Filter out the agent to delete
     const filteredAgents = agents.filter((a: any) => a.id !== agentId)
@@ -111,8 +125,12 @@ export async function DELETE(
       )
     }
 
-    // Write back to agents.json
-    await fs.writeFile(agentsFile, JSON.stringify(filteredAgents, null, 2), 'utf-8')
+    // Write back to agents.json (preserve structure)
+    const outputData = {
+      agents: filteredAgents,
+      lastUpdated: new Date().toISOString()
+    }
+    await fs.writeFile(agentsFile, JSON.stringify(outputData, null, 2), 'utf-8')
 
     return NextResponse.json({ success: true })
   } catch (error) {
