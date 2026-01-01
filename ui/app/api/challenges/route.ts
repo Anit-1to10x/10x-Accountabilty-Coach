@@ -56,6 +56,10 @@ async function countCompletedDays(daysDir: string): Promise<{ completed: number,
 
 export async function GET(request: NextRequest) {
   try {
+    // Get profileId from query params (filter by owner)
+    const { searchParams } = new URL(request.url)
+    const profileId = searchParams.get('profileId')
+
     // Always use global challenges directory (data/challenges)
     const challengesDir = PATHS.challenges
 
@@ -89,6 +93,11 @@ export async function GET(request: NextRequest) {
               console.error(`No challenge file found in ${dir.name}`)
               continue
             }
+          }
+
+          // Filter by profileId if specified
+          if (profileId && config.owner && config.owner !== profileId) {
+            continue // Skip challenges not owned by this profile
           }
 
           // Count completed days (check both 'days' and 'daily' folders)
@@ -139,6 +148,8 @@ export async function GET(request: NextRequest) {
           challenges.push({
             id: config.id || dir.name,
             name: config.name || dir.name,
+            owner: config.owner || null,
+            ownerName: config.owner_name || null,
             type: config.type || 'custom',
             goal: config.goal || '',
             agent: config.agent || 'accountability-coach',
