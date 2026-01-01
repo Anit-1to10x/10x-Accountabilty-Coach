@@ -5,8 +5,8 @@ import type { Punishment } from '@/types/streak'
 import { DATA_DIR } from '@/lib/paths'
 
 const PUNISHMENTS_DIR = path.join(DATA_DIR, 'punishments')
-const ACTIVE_FILE = path.join(PUNISHMENTS_DIR, 'active.json')
-const HISTORY_FILE = path.join(PUNISHMENTS_DIR, 'history.json')
+const ACTIVE_FILE = path.join(PUNISHMENTS_DIR, 'active.md')
+const HISTORY_FILE = path.join(PUNISHMENTS_DIR, 'history.md')
 
 interface PunishmentRecord {
   punishment: Punishment
@@ -21,14 +21,62 @@ async function ensurePunishmentsDir() {
   try {
     await fs.access(ACTIVE_FILE)
   } catch {
-    await fs.writeFile(ACTIVE_FILE, JSON.stringify([], null, 2), 'utf-8')
+    await fs.writeFile(ACTIVE_FILE, `# Active Punishments
+
+`, 'utf-8')
   }
 
   try {
     await fs.access(HISTORY_FILE)
   } catch {
-    await fs.writeFile(HISTORY_FILE, JSON.stringify([], null, 2), 'utf-8')
+    await fs.writeFile(HISTORY_FILE, `# Punishment History
+
+`, 'utf-8')
   }
+}
+
+// Parse MD file to extract punishment records
+function parsePunishmentsMd(content: string): PunishmentRecord[] {
+  const records: PunishmentRecord[] = []
+  const sections = content.split(/^## /m).slice(1) // Skip header
+
+  for (const section of sections) {
+    const lines = section.split('\n')
+    const titleMatch = lines[0]?.match(/(.+?)\s*\((.+?)\)/)
+
+    if (!titleMatch) continue
+
+    const record: any = {
+      punishment: {},
+      challengeId: '',
+      challengeName: titleMatch[1].trim()
+    }
+
+    for (const line of lines) {
+      const match = line.match(/^-\s*\*\*(.+?):\*\*\s*(.+)$/i)
+      if (match) {
+        const key = match[1].toLowerCase().replace(/\s+/g, '_')
+        let value: any = match[2].trim()
+
+        // Parse special values
+        if (value.match(/^\d+$/)) value = parseInt(value)
+
+        // Assign to correct object
+        if (['challenge_id', 'challenge_name'].includes(key)) {
+          if (key === 'challenge_id') record.challengeId = value
+          if (key === 'challenge_name') record.challengeName = value
+        } else {
+          record.punishment[key] = value
+        }
+      }
+    }
+
+    if (record.challengeId) {
+      records.push(record)
+    }
+  }
+
+  return records
 }
 
 // GET: List all active punishments
@@ -42,7 +90,7 @@ export async function GET(request: NextRequest) {
 
     let filePath = type === 'history' ? HISTORY_FILE : ACTIVE_FILE
     const data = await fs.readFile(filePath, 'utf-8')
-    let punishments: PunishmentRecord[] = JSON.parse(data)
+    let punishments: PunishmentRecord[] = parsePunishmentsMd(data)
 
     // Filter by challengeId if provided
     if (challengeId) {
@@ -71,8 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Read current active punishments
-    const data = await fs.readFile(ACTIVE_FILE, 'utf-8')
-    const activePunishments: PunishmentRecord[] = JSON.parse(data)
+    let content = await fs.readFile(ACTIVE_FILE, 'utf-8')
 
     // Add new punishment
     const newRecord: PunishmentRecord = {
@@ -85,10 +132,21 @@ export async function POST(request: NextRequest) {
       challengeName,
     }
 
-    activePunishments.push(newRecord)
+    // Append new punishment entry
+    const punishmentEntry = `## ${challengeName} (${newRecord.punishment.id})
+- **Challenge ID:** ${challengeId}
+- **Challenge Name:** ${challengeName}
+- **ID:** ${newRecord.punishment.id}
+- **Type:** ${newRecord.punishment.type || 'consequence'}
+- **Description:** ${newRecord.punishment.description || 'No description'}
+- **Status:** ${newRecord.punishment.status}
+- **Created At:** ${newRecord.punishment.createdAt || new Date().toISOString()}
+- **Triggered By:** ${newRecord.punishment.triggeredBy || 'streak_break'}
 
-    // Save
-    await fs.writeFile(ACTIVE_FILE, JSON.stringify(activePunishments, null, 2), 'utf-8')
+`
+
+    content += punishmentEntry
+    await fs.writeFile(ACTIVE_FILE, content, 'utf-8')
 
     // Log to index.md
     try {
@@ -98,7 +156,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           action: 'file_created',
           data: {
-            filePath: 'punishments/active.json',
+            filePath: 'punishments/active.md',
             purpose: 'Active punishments registry',
             created: new Date().toISOString(),
             modified: new Date().toISOString(),

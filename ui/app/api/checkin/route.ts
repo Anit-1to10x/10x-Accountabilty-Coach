@@ -165,32 +165,51 @@ User checked in on time. ${data.mood! >= 4 ? 'Good momentum.' : data.mood! <= 2 
       console.error('Could not update challenge log:', error)
     }
 
-    // Update streak in registry
+    // Update streak in registry (MD format)
     try {
-      const registryPath = path.join(DATA_DIR, '.registry', 'challenges.json')
-      let registry
+      const registryDir = path.join(DATA_DIR, '.registry')
+      const registryPath = path.join(registryDir, 'challenges.md')
+      await fs.mkdir(registryDir, { recursive: true })
 
+      let registryContent = ''
       try {
-        const registryContent = await fs.readFile(registryPath, 'utf-8')
-        registry = JSON.parse(registryContent)
+        registryContent = await fs.readFile(registryPath, 'utf-8')
       } catch {
-        registry = { version: '1.0.0', challenges: [] }
+        registryContent = `# Challenges Registry
+
+## Active Challenges
+
+`
       }
 
-      const challengeIndex = registry.challenges.findIndex((c: any) => c.id === data.challengeId)
+      // Parse existing challenges
+      const challengePattern = new RegExp(`### (.+?) \\(${data.challengeId}\\)[\\s\\S]*?(?=### |$)`, 'g')
+      const existingMatch = registryContent.match(challengePattern)
 
-      if (challengeIndex >= 0) {
-        registry.challenges[challengeIndex].streak = (registry.challenges[challengeIndex].streak || 0) + 1
-        registry.challenges[challengeIndex].lastCheckin = date
+      if (existingMatch) {
+        // Update existing challenge streak
+        registryContent = registryContent.replace(
+          new RegExp(`(### .+? \\(${data.challengeId}\\)[\\s\\S]*?)- \\*\\*Streak:\\*\\* (\\d+) days`, 'g'),
+          (match, prefix, currentStreak) => {
+            const newStreak = parseInt(currentStreak) + 1
+            return match.replace(`- **Streak:** ${currentStreak} days`, `- **Streak:** ${newStreak} days`)
+              .replace(/- \*\*Last Check-in:\*\* .+/, `- **Last Check-in:** ${date}`)
+          }
+        )
       } else {
-        registry.challenges.push({
-          id: data.challengeId,
-          streak: 1,
-          lastCheckin: date,
-        })
+        // Add new challenge entry
+        const newEntry = `### Challenge ${data.challengeId} (${data.challengeId})
+- **ID:** ${data.challengeId}
+- **Status:** active
+- **Streak:** 1 days
+- **Last Check-in:** ${date}
+- **Created:** ${date}
+
+`
+        registryContent += newEntry
       }
 
-      await fs.writeFile(registryPath, JSON.stringify(registry, null, 2))
+      await fs.writeFile(registryPath, registryContent, 'utf-8')
     } catch (error) {
       console.error('Could not update registry:', error)
     }

@@ -221,40 +221,58 @@ ${data.tomorrowCommitment || 'Not specified'}
   await fs.writeFile(checkInFilePath, existingContent + checkInEntry)
 }
 
-// Update registry for streak tracking
+// Update registry for streak tracking (MD format)
 async function updateRegistry(
   challengeId: string,
   streak: number
 ): Promise<void> {
   const registryDir = path.join(DATA_DIR, '.registry')
-  const registryPath = path.join(registryDir, 'challenges.json')
+  const registryPath = path.join(registryDir, 'challenges.md')
 
   await fs.mkdir(registryDir, { recursive: true })
 
-  let registry: any = { version: '1.0.0', challenges: [] }
+  let registryContent = ''
 
   try {
-    const content = await fs.readFile(registryPath, 'utf-8')
-    registry = JSON.parse(content)
-  } catch {}
+    registryContent = await fs.readFile(registryPath, 'utf-8')
+  } catch {
+    registryContent = `# Challenges Registry
 
-  registry.challenges = registry.challenges || []
+## Active Challenges
 
-  const date = new Date().toISOString().split('T')[0]
-  const challengeIndex = registry.challenges.findIndex((c: any) => c.id === challengeId)
-
-  if (challengeIndex >= 0) {
-    registry.challenges[challengeIndex].streak = streak
-    registry.challenges[challengeIndex].lastCheckin = date
-  } else {
-    registry.challenges.push({
-      id: challengeId,
-      streak,
-      lastCheckin: date,
-    })
+`
   }
 
-  await fs.writeFile(registryPath, JSON.stringify(registry, null, 2))
+  const date = new Date().toISOString().split('T')[0]
+
+  // Check if challenge exists in registry
+  const challengePattern = new RegExp(`### (.+?) \\(${challengeId}\\)[\\s\\S]*?(?=### |$)`, 'g')
+  const existingMatch = registryContent.match(challengePattern)
+
+  if (existingMatch) {
+    // Update existing challenge
+    registryContent = registryContent.replace(
+      new RegExp(`(### .+? \\(${challengeId}\\)[\\s\\S]*?)- \\*\\*Streak:\\*\\* \\d+ days`, 'g'),
+      (match) => match.replace(/- \*\*Streak:\*\* \d+ days/, `- **Streak:** ${streak} days`)
+    )
+    registryContent = registryContent.replace(
+      new RegExp(`(### .+? \\(${challengeId}\\)[\\s\\S]*?)- \\*\\*Last Check-in:\\*\\* .+`, 'g'),
+      (match) => match.replace(/- \*\*Last Check-in:\*\* .+/, `- **Last Check-in:** ${date}`)
+    )
+  } else {
+    // Add new challenge entry
+    const newEntry = `### Challenge ${challengeId} (${challengeId})
+- **ID:** ${challengeId}
+- **Status:** active
+- **Streak:** ${streak} days
+- **Last Check-in:** ${date}
+- **Created:** ${date}
+
+`
+    registryContent += newEntry
+  }
+
+  await fs.writeFile(registryPath, registryContent, 'utf-8')
 }
 
 export async function POST(request: NextRequest) {

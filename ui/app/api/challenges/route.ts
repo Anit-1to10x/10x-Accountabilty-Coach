@@ -278,26 +278,35 @@ Getting started with ${name}
 
     await fs.writeFile(path.join(daysDir, `${today}.md`), dayMd, 'utf-8')
 
-    // Update registry
-    const registryPath = path.join(DATA_DIR, '.registry', 'challenges.json')
-    let registry: any = { challenges: [] }
+    // Update registry (MD format)
+    const registryDir = path.join(DATA_DIR, '.registry')
+    const registryPath = path.join(registryDir, 'challenges.md')
+    await fs.mkdir(registryDir, { recursive: true })
+
+    let registryContent = ''
     try {
-      const registryContent = await fs.readFile(registryPath, 'utf-8')
-      registry = JSON.parse(registryContent)
+      registryContent = await fs.readFile(registryPath, 'utf-8')
     } catch {
-      await fs.mkdir(path.join(DATA_DIR, '.registry'), { recursive: true })
+      // Initialize new registry
+      registryContent = `# Challenges Registry
+
+## Active Challenges
+
+`
     }
 
-    registry.challenges = registry.challenges || []
-    registry.challenges.push({
-      id: challengeId,
-      name,
-      streak: 0,
-      last_checkin: null,
-      status: 'active',
-    })
+    // Append new challenge entry
+    const newEntry = `### ${name} (${challengeId})
+- **ID:** ${challengeId}
+- **Status:** active
+- **Streak:** 0 days
+- **Last Check-in:** None
+- **Created:** ${new Date().toISOString().split('T')[0]}
 
-    await fs.writeFile(registryPath, JSON.stringify(registry, null, 2), 'utf-8')
+`
+
+    registryContent += newEntry
+    await fs.writeFile(registryPath, registryContent, 'utf-8')
 
     return NextResponse.json({
       success: true,

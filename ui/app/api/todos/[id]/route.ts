@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
-import { PATHS } from '@/lib/paths'
+import { PATHS, getProfilePaths } from '@/lib/paths'
 
 const TODOS_FILE = path.join(PATHS.todos, 'active.json')
 
@@ -50,46 +50,72 @@ export async function PATCH(
     const body = await request.json()
     const { completed, title, date, priority } = body
 
-    // Read existing todos
-    let todos: Todo[] = []
+    // Get profile ID from query or header
+    const { searchParams } = new URL(request.url)
+    const profileId = searchParams.get('profileId') || request.headers.get('X-Profile-Id')
+    const todosDir = profileId ? getProfilePaths(profileId).todos : PATHS.todos
+
+    // Read existing todos from MD file (MD is the only source of truth)
+    const mdFile = path.join(todosDir, 'active.md')
+    let usingMdFile = false
+
     try {
-      const content = await fs.readFile(TODOS_FILE, 'utf-8')
-      todos = JSON.parse(content)
-    } catch {
-      return NextResponse.json(
-        { error: 'Todos file not found' },
-        { status: 404 }
-      )
+      const mdContent = await fs.readFile(mdFile, 'utf-8')
+      const lines = mdContent.split('\n')
+
+      // Parse and update MD file
+      let todoCounter = 0
+      const updatedLines: string[] = []
+
+      for (const line of lines) {
+        // Track section headers
+        const sectionMatch = line.match(/^###\s+(.+)/)
+        if (sectionMatch) {
+          updatedLines.push(line)
+          continue
+        }
+
+        // Match todo items
+        const todoMatch = line.match(/^-\s*\[([ xX])\]\s*(.+)$/)
+        if (todoMatch) {
+          todoCounter++
+          const todoId = `todo-${todoCounter}`
+
+          // If this is the todo to update
+          if (todoId === params.id) {
+            if (completed !== undefined) {
+              // Update the checkbox
+              const checkbox = completed ? '[x]' : '[ ]'
+              const taskText = todoMatch[2]
+              updatedLines.push(`- ${checkbox} ${taskText}`)
+              usingMdFile = true
+            } else {
+              updatedLines.push(line)
+            }
+          } else {
+            updatedLines.push(line)
+          }
+        } else {
+          updatedLines.push(line)
+        }
+      }
+
+      if (usingMdFile) {
+        // Write updated MD file
+        await fs.writeFile(mdFile, updatedLines.join('\n'))
+      }
+    } catch (mdError) {
+      // MD file doesn't exist or failed to parse, fall back to JSON
+      usingMdFile = false
     }
 
-    // Find and update todo
-    const todoIndex = todos.findIndex((t) => t.id === params.id)
-    if (todoIndex === -1) {
+    // MD file is the only source of truth
+    if (!usingMdFile) {
       return NextResponse.json(
         { error: 'Todo not found' },
         { status: 404 }
       )
     }
-
-    // IMMUTABILITY PROTECTION: Prevent unchecking completed todos
-    if (completed !== undefined && completed === false && todos[todoIndex].completed === true) {
-      return NextResponse.json(
-        {
-          error: 'Cannot uncheck completed todo. Once checked in, it stays checked.',
-          immutable: true
-        },
-        { status: 403 }
-      )
-    }
-
-    // Update fields
-    if (completed !== undefined) todos[todoIndex].completed = completed
-    if (title !== undefined) todos[todoIndex].title = title
-    if (date !== undefined) todos[todoIndex].date = date
-    if (priority !== undefined) todos[todoIndex].priority = priority
-
-    // Save updated todos
-    await fs.writeFile(TODOS_FILE, JSON.stringify(todos, null, 2))
 
     // Update index.md
     try {
@@ -100,7 +126,7 @@ export async function PATCH(
           action: 'todo_updated',
           data: {
             todoId: params.id,
-            completed: todos[todoIndex].completed,
+            completed: completed,
             date: new Date().toISOString(),
           },
         }),
@@ -111,7 +137,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      todo: todos[todoIndex],
+      todo: { id: params.id, completed, title, date, priority },
     })
   } catch (error: any) {
     console.error('Failed to update todo:', error)

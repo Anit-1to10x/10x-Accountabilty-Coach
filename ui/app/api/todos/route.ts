@@ -84,26 +84,45 @@ export async function POST(request: NextRequest) {
 
     // Use profile-specific path if profileId provided, otherwise fall back to legacy
     const todosDir = profileId ? getProfilePaths(profileId).todos : PATHS.todos
-    const activeFile = path.join(todosDir, 'active.json')
+    const activeFile = path.join(todosDir, 'active.md')
 
     await fs.mkdir(todosDir, { recursive: true })
 
-    let todos = []
+    // Read existing MD file
+    let mdContent = ''
+    let existingTodos = 0
     try {
-      const data = await fs.readFile(activeFile, 'utf-8')
-      todos = JSON.parse(data)
+      mdContent = await fs.readFile(activeFile, 'utf-8')
+      // Count existing todos
+      existingTodos = (mdContent.match(/^-\s*\[[ xX]\]/gm) || []).length
     } catch {
-      // File doesn't exist
+      // File doesn't exist, create default structure
+      mdContent = `# Tasks\n\n## Today (${new Date().toISOString().split('T')[0]})\n\n### General Tasks\n`
     }
 
     const newTodo = {
-      id: Date.now().toString(),
+      id: `todo-${existingTodos + 1}`,
       createdAt: new Date().toISOString(),
       ...todo,
     }
 
-    todos.push(newTodo)
-    await fs.writeFile(activeFile, JSON.stringify(todos, null, 2))
+    // Append new todo to MD file
+    // Find the first section header or create one
+    const lines = mdContent.split('\n')
+    let insertIndex = lines.findIndex(line => line.startsWith('### '))
+    if (insertIndex === -1) {
+      // No section found, add to end
+      insertIndex = lines.length
+      lines.push('### General Tasks')
+    } else {
+      // Insert after the section header
+      insertIndex++
+    }
+
+    const todoLine = `- [ ] ${newTodo.title || newTodo.text || 'New task'}`
+    lines.splice(insertIndex, 0, todoLine)
+
+    await fs.writeFile(activeFile, lines.join('\n'))
 
     // Log to index.md
     try {
@@ -113,9 +132,9 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           action: 'file_modified',
           data: {
-            filePath: 'todos/active.json',
-            original: `${todos.length - 1} todos`,
-            changes: `Added todo: ${newTodo.title}`,
+            filePath: 'todos/active.md',
+            original: `${existingTodos} todos`,
+            changes: `Added todo: ${newTodo.title || newTodo.text}`,
             date: new Date().toISOString(),
           },
         }),
